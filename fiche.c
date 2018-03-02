@@ -181,11 +181,6 @@ static void log_entry(const Fiche_Settings *s, const char *ip,
 static void get_date(char *buf);
 
 
-/**
- * @brief Time seed
- */
-unsigned int seed;
-
 /******************************************************************************
  * Public fiche functions
  */
@@ -223,8 +218,6 @@ void fiche_init(Fiche_Settings *settings) {
 }
 
 int fiche_run(Fiche_Settings settings) {
-
-    seed = time(NULL);
 
     // Check if log file is writable (if set)
     if ( settings.log_file_path ) {
@@ -410,9 +403,9 @@ static int set_domain_name(Fiche_Settings *settings) {
         return -1;
     }
 
-    strcpy(b, settings->prefix);
-    strcat(b, "://");
-    strcat(b, settings->domain);
+    strlcpy(b, settings->prefix, len);
+    strlcat(b, "://", len);
+    strlcat(b, settings->domain, len);
 
     settings->domain = b;
 
@@ -581,7 +574,7 @@ static void *handle_connection(void *args) {
             hostname, sizeof(hostname), NULL, 0, 0) != 0 ) {
 
         // Couldn't resolve a hostname
-        strcpy(hostname, "n/a");
+       strlcpy(hostname, "n/a", 1024);
     }
 
     // Print status on this connection
@@ -738,7 +731,7 @@ static void generate_slug(char **output, uint8_t length, uint8_t extra_length) {
 
     // Take n-th symbol from symbol table and use it for slug generation
     for (int i = 0; i < length + extra_length; i++) {
-        int n = rand_r(&seed) % strlen(Fiche_Symbols);
+        int n = arc4random() % strlen(Fiche_Symbols);
         *(output[0] + sizeof(char) * i) = Fiche_Symbols[n];
     }
 
