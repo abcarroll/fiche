@@ -54,6 +54,9 @@ $ cat fiche.c | nc localhost 9999
  */
 const char *Fiche_Symbols = "abcdefghijklmnopqrstuvwxyz0123456789";
 
+/* File handle for the log file */
+static FILE *logfile_handle = NULL;
+
 
 /******************************************************************************
  * Inner structs
@@ -223,6 +226,27 @@ int fiche_run(Fiche_Settings settings) {
 
     seed = time(NULL);
 
+    // Check if log file is writable (if set)
+    if ( settings.log_file_path ) {
+
+        // Create log file if it doesn't exist
+        FILE *f = fopen(settings.log_file_path, "a+");
+	if (!f){
+	   print_error("Unable to create log file!");
+	   return -1;
+	}
+
+        // Then check if it's accessible
+        if ( access(settings.log_file_path, W_OK) != 0 ) {
+            print_error("Log file not writable!");
+	    fclose(f);
+            return -1;
+        }
+
+        logfile_handle = f;
+
+    }
+
     // Display welcome message
     {
         char date[64];
@@ -250,24 +274,10 @@ int fiche_run(Fiche_Settings settings) {
         }
     }
 
-    // Check if log file is writable (if set)
-    if ( settings.log_file_path ) {
-
-        // Create log file if it doesn't exist
-        FILE *f = fopen(settings.log_file_path, "a+");
-        fclose(f);
-
-        // Then check if it's accessible
-        if ( access(settings.log_file_path, W_OK) != 0 ) {
-            print_error("Log file not writable!");
-            return -1;
-        }
-
-    }
-
     // Try to set domain name
     if ( set_domain_name(&settings) != 0 ) {
         print_error("Was not able to set domain name!");
+        if (logfile_handle) fclose(logfile_handle);
         return -1;
     }
 
@@ -278,6 +288,8 @@ int fiche_run(Fiche_Settings settings) {
 
     // This is allways allocated on the heap
     free(settings.domain);
+
+    if (logfile_handle) fclose(logfile_handle);
 
     return 0;
 
@@ -290,30 +302,36 @@ int fiche_run(Fiche_Settings settings) {
 
 static void print_error(const char *format, ...) {
     va_list args;
+    FILE *fd = logfile_handle ? logfile_handle : stderr;
+
     va_start(args, format);
 
-    printf("[Fiche][ERROR] ");
-    vprintf(format, args);
-    printf("\n");
-
+    fprintf(fd, "[Fiche][ERROR] ");
+    vfprintf(fd, format, args);
+    fprintf(fd, "\n");
+    fflush(fd);
     va_end(args);
 }
 
 
 static void print_status(const char *format, ...) {
     va_list args;
+    FILE *fd = logfile_handle ? logfile_handle : stderr;
+
     va_start(args, format);
 
-    printf("[Fiche][STATUS] ");
-    vprintf(format, args);
-    printf("\n");
-
+    fprintf(fd, "[Fiche][STATUS] ");
+    vfprintf(fd, format, args);
+    fprintf(fd, "\n");
+    fflush(fd);
     va_end(args);
 }
 
 
 static void print_separator() {
-    printf("============================================================\n");
+    FILE *fd = logfile_handle ? logfile_handle : stderr;
+    fprintf(fd, "============================================================\n");
+    fflush(fd);
 }
 
 
@@ -325,8 +343,7 @@ static void log_entry(const Fiche_Settings *s, const char *ip,
         return;
     }
 
-    FILE *f = fopen(s->log_file_path, "a");
-    if (!f) {
+    if (!logfile_handle) {
         print_status("Was not able to save entry to the log!");
         return;
     }
@@ -335,8 +352,7 @@ static void log_entry(const Fiche_Settings *s, const char *ip,
     get_date(date);
 
     // Write entry to file
-    fprintf(f, "%s -- %s -- %s (%s)\n", slug, date, ip, hostname);
-    fclose(f);
+    fprintf(logfile_handle, "%s -- %s -- %s (%s)\n", slug, date, ip, hostname);
 }
 
 
