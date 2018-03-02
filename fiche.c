@@ -776,7 +776,7 @@ static int create_directory(char *output_dir, char *slug) {
 
 
 static int save_to_file(const Fiche_Settings *s, uint8_t *data, char *slug) {
-    char *file_name = "index.txt";
+    char *file_name = "paste.txt";
 
     // Additional 2 bytes are for 2 slashes
     size_t len = strlen(s->output_dir_path) + strlen(slug) + strlen(file_name) + 3;
