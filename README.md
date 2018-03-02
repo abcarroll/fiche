@@ -167,7 +167,7 @@ __Default value:__ `./code`
 #### Domain `-d`
 
 This will be used as a prefix for an output received by the client.
-Value will be prepended with `http`.
+Value will be prepended with the domain prefix (see -P) if set or `http` otherwise.
 
 ```
 fiche -d domain.com
