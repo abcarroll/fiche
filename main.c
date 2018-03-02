@@ -130,11 +130,7 @@ int main(int argc, char **argv) {
         }
     }
 
-
-    fiche_run(fs);
-
-
-    return 0;
+    return fiche_run(fs);
 }
 
 
