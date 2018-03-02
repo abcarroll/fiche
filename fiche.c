@@ -281,6 +281,31 @@ int fiche_run(Fiche_Settings settings) {
         return -1;
     }
 
+    pid_t pid = fork();
+    if (pid == -1){
+        char *err = strerror(0);
+        print_error("Unable to fork into background: %s", err);
+	if (logfile_handle) fclose(logfile_handle);
+        return -1;
+    }
+    if (pid > 0){
+        //parent
+	if (logfile_handle) fclose(logfile_handle);
+        return 0;
+    }
+
+    if (setsid() == -1){
+        char *err = strerror(0);
+        print_error("Creating new session id: %s", err);
+	if (logfile_handle) fclose(logfile_handle);
+        return -1;
+    }
+
+    // We are detached so close those to avoid noise
+    fclose(stdin);
+    fclose(stdout);
+    fclose(stderr);
+
     // Main loop in this method
     start_server(&settings);
 
