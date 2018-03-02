@@ -203,12 +203,12 @@ __Default value:__ 4
 
 -------------------------------------------------------------------------------
 
-#### HTTPS `-S`
+#### protocol prefix `-P`
 
-If set, fiche returns url with https prefix instead of http
+If set, fiche returns url with protocol prefix 'prefix' instead of http
 
 ```
-fiche -S
+fiche -P https
 ```
 
 __Output url with this parameter__: `https://localhost/xxxx`,

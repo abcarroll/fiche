@@ -54,9 +54,9 @@ typedef struct Fiche_Settings {
     uint8_t slug_len;
 
     /**
-     * @brief If set, returns url with https prefix instead of http
+     * @brief Protocol prefix to use, defaults to "http://"
      */
-    bool https;
+    char *prefix;
 
     /**
      * @brief Connection buffer length

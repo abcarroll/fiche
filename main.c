@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
     // Parse input arguments
     int c;
-    while ((c = getopt(argc, argv, "D6eSp:b:s:d:o:l:B:u:w:")) != -1) {
+    while ((c = getopt(argc, argv, "D6ep:b:s:d:o:P:l:B:u:w:")) != -1) {
         switch (c) {
 
             // domain
@@ -68,10 +68,10 @@ int main(int argc, char **argv) {
             }
             break;
 
-            // https
-            case 'S':
+            // custom protocol prefix
+            case 'P':
             {
-                fs.https = true;
+                fs.prefix = optarg;
             }
             break;
 
@@ -121,9 +121,9 @@ int main(int argc, char **argv) {
             default:
             {
                 printf("usage: fiche [-dpsSoBulbw].\n");
-                printf("             [-d domain] [-p port] [-s slug size]\n");
+                printf("             [-d domain] [-p port] [-P protocol] [-s slug size]\n");
                 printf("             [-o output directory] [-B buffer size] [-u user name]\n");
-                printf("             [-l log file] [-b banlist] [-w whitelist] [-S]\n");
+                printf("             [-l log file] [-b banlist] [-w whitelist]\n");
                 return 0;
             }
             break;
