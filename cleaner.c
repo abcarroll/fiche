@@ -37,14 +37,16 @@ static void clean(const char *path, const uint16_t age) {
 	};
 
 	
-	if (verbose) VERBOSE("reading directory content.")
+	if (verbose) {
+		VERBOSE("reading directory content.")
+	}
 	while ((dent = readdir(dfd)) != NULL) {
 		// avoid actual and previous dir
 		if ((strcmp(".", dent->d_name) == 0) ||
 			(strcmp("..", dent->d_name) == 0))
 			continue;
-		// avoid other than regular files
-		if (dent->d_type != DT_REG)
+		// avoid other than dirs
+		if (dent->d_type != DT_DIR)
 			continue;
 
 		char *fname = dent->d_name;
@@ -63,12 +65,23 @@ static void clean(const char *path, const uint16_t age) {
 
 		// found one?
 		if (c_age >= age) {
-			if (verbose) VERBOSE("deleting file %s.", fname)
+			if (verbose) {
+				VERBOSE("deleting file %s.", fname)
+			}
 			if (!dry_run) {
 				{
-					if (unlink(fname) == -1) {
+					// clean index.txt
+					char index_path[NAME_MAX];
+					strncpy(index_path, fname, (NAME_MAX-11));
+					strcat(index_path, "/index.txt");
+					if (unlink(index_path) == -1) {
 						perror("error");
 						continue;
+					} else {
+						if (rmdir(fname) == -1) {
+							perror("error");
+							continue;
+						}
 					}
 				};
 			}	
@@ -127,12 +140,15 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "error: age must be older than 0 minutes.\n");
 		return (1);
 	}
-	if (dry_run)
+	if (dry_run) {
 		VERBOSE("dry running.")
+	}
 
 	// change to fiche output dir
 	{
-		if (verbose) VERBOSE("changing dir.")
+		if (verbose) {
+			VERBOSE("changing dir.")
+		}
 		int o = chdir (dir);
 		if (o != 0) {
 			perror("error");
@@ -143,7 +159,9 @@ int main(int argc, char *argv[])
 	// main loop
 	while (1)
 	{
-		if (verbose) VERBOSE("entering main loop")
+		if (verbose) {
+			VERBOSE("entering main loop")
+		}
 		clean(dir, time);
 		sleep(sleep_time);
 	}
