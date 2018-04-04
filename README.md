@@ -215,6 +215,7 @@ fiche -S
 
 __Output url with this parameter__: `https://localhost/xxxx`,
 where x is a randomized character
+
 -------------------------------------------------------------------------------
 
 #### Compression `-z`
