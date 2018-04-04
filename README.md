@@ -107,6 +107,8 @@ __Remember__ to reload the shell with `source ~/.bashrc` or `source ~/.bash_prof
 ## Requirements
 To use fiche you have to have netcat installed. You probably already have it - try typing `nc` or `netcat` into your terminal!
 
+__Note:__ For compilation with zlib compression you will need to install the zlibc library.
+
 -------------------------------------------------------------------------------
 
 # Server-side usage
@@ -136,7 +138,7 @@ To use fiche you have to have netcat installed. You probably already have it - t
 ## Usage
 
 ```
-usage: fiche [-D6epbsdSolBuw].
+usage: fiche [-zD6epbsdSolBuw].
              [-d domain] [-p port] [-s slug size]
              [-o output directory] [-B buffer size] [-u user name]
              [-l log file] [-b banlist] [-w whitelist] [-S]
@@ -213,6 +215,20 @@ fiche -S
 
 __Output url with this parameter__: `https://localhost/xxxx`,
 where x is a randomized character
+-------------------------------------------------------------------------------
+
+#### Compression `-z`
+
+If set, compression of pasted data will be enabled (gzip).
+
+```
+fiche -z
+```
+
+__Default value:__ not set
+
+__WARNING:__ This requires zlibc installed on the server. The extension `.gz`
+will be appended to the file name.
 
 -------------------------------------------------------------------------------
 
