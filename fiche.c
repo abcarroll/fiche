@@ -48,6 +48,7 @@ $ cat fiche.c | nc localhost 9999
 #include <netinet/in.h>
 #include <netinet/in.h>
 
+#include <zlib.h>
 
 /******************************************************************************
  * Various declarations
@@ -212,7 +213,9 @@ void fiche_init(Fiche_Settings *settings) {
         // path to banlist
         NULL,
         // path to whitelist
-        NULL
+        NULL,
+	// compress
+	false,
     };
 
     // Copy default settings to provided instance
@@ -269,6 +272,11 @@ int fiche_run(Fiche_Settings settings) {
     if ( set_domain_name(&settings) != 0 ) {
         print_error("Was not able to set domain name!");
         return -1;
+    }
+
+    // Let people know that compression is enabled
+    if (settings.compress) {
+		print_status("Compression enabled");
     }
 
     // Main loop in this method
@@ -762,11 +770,49 @@ static int save_to_file(const Fiche_Settings *s, uint8_t *data, char *slug) {
 
     // Null-terminate buffer if not null terminated already
     data[s->buffer_len - 1] = 0;
+    
+    if (s->compress) {
+        // TODO: improve this
+        // For now the chunk size will be eq to the received buffer length
+        uint32_t chunk_size = s->buffer_len;
+        unsigned char data_out[s->buffer_len];
+        z_stream stream;
 
-    if ( fprintf(f, "%s", data) < 0 ) {
-        fclose(f);
-        free(path);
-        return -1;
+#if (!defined(GZIP_COMPRESSION) || !defined(WINDOW_BITS)) 
+#define GZIP_COMPRESSION    16
+#define WINDOW_BITS    15
+#endif
+        // Init zlib stream
+        stream.zalloc = Z_NULL;
+        stream.zfree = Z_NULL;
+        stream.opaque = Z_NULL;
+        if ((deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                             WINDOW_BITS | GZIP_COMPRESSION, 8,
+                             Z_DEFAULT_STRATEGY)) != Z_OK) {
+            fclose(f);
+            free(path);
+            return Z_ERRNO;
+        }
+
+        stream.avail_in = sizeof(data);
+        stream.next_in = data;
+        stream.avail_out = chunk_size;
+        stream.next_out = data_out;
+
+        if (deflate(&stream, Z_FINISH) == Z_STREAM_ERROR) {
+            (void)deflateEnd(&stream);
+            fclose(f);
+            free(path);
+            return Z_STREAM_ERROR;
+        }
+        fwrite(data_out, sizeof(char), (chunk_size - stream.avail_out), f);
+        (void)deflateEnd(&stream);
+    } else {
+        if( fprintf(f, "%s", data) < 0 ) {
+            fclose(f);
+            free(path);
+            return -1;
+        }
     }
 
     fclose(f);

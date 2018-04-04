@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
     // Parse input arguments
     int c;
-    while ((c = getopt(argc, argv, "D6eSp:b:s:d:o:l:B:u:w:")) != -1) {
+    while ((c = getopt(argc, argv, "zD6eSp:b:s:d:o:l:B:u:w:")) != -1) {
         switch (c) {
 
             // domain
@@ -114,6 +114,13 @@ int main(int argc, char **argv) {
             case 'w':
             {
                 fs.whitelist_path = optarg;
+            }
+            break;
+            
+	    // compress
+            case 'z':
+            {
+                fs.compress = true;
             }
             break;
 

@@ -3,7 +3,7 @@ CFLAGS+=-g -pthread -O2 -Wall -Wextra -Wpedantic -Wstrict-overflow -fno-strict-a
 prefix=/usr/local/bin
 
 all:
-	${CC} main.c fiche.c $(CFLAGS) -o fiche
+	${CC} main.c fiche.c -lz $(CFLAGS) -o fiche
 	${CC} cleaner.c $(CFLAGS) -o cleaner
 
 install: fiche

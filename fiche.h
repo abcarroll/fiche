@@ -85,7 +85,10 @@ typedef struct Fiche_Settings {
      */
     char *whitelist_path;
 
-
+    /**
+     * @brief If set, compress data
+     */
+    bool compress;
 
 } Fiche_Settings;
 
