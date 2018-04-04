@@ -794,7 +794,7 @@ static int save_to_file(const Fiche_Settings *s, uint8_t *data, char *slug) {
             return Z_ERRNO;
         }
 
-        stream.avail_in = sizeof(data);
+        stream.avail_in = strlen(data);
         stream.next_in = data;
         stream.avail_out = chunk_size;
         stream.next_out = data_out;
