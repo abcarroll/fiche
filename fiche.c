@@ -759,7 +759,11 @@ static int save_to_file(const Fiche_Settings *s, uint8_t *data, char *slug) {
         return -1;
     }
 
-    snprintf(path, len, "%s%s%s%s%s", s->output_dir_path, "/", slug, "/", file_name);
+    snprintf(path,
+            // If compression set, append .gz to file_name and add extra length
+            (s->compress ? len+3 : len),
+            (s->compress ? "%s%s%s%s%s.gz" : "%s%s%s%s%s"),
+            s->output_dir_path, "/", slug, "/", file_name);
 
     // Attempt file saving
     FILE *f = fopen(path, "w");
@@ -794,7 +798,7 @@ static int save_to_file(const Fiche_Settings *s, uint8_t *data, char *slug) {
             return Z_ERRNO;
         }
 
-        stream.avail_in = strlen(data);
+        stream.avail_in = strlen((const char *)data);
         stream.next_in = data;
         stream.avail_out = chunk_size;
         stream.next_out = data_out;
