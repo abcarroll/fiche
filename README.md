@@ -325,6 +325,23 @@ server {
 }
 ```
 
+-------------------------------------------------------------------------------
+
+## Cleaner
+
+Daemon that cleans latest (defined by age in minutes) slugs created by __fiche__.
+
+### Usage
+```
+usage: cleaner	[-hvD] [-s sleep] [-t time] [-d directory]
+```
+* `-s`: sleep in seconds before a new check. (default: 10 seconds)
+* `-h`: usage.
+* `-v`: verbosity.
+* `-D`: dry-run (don't delete any files).
+* `-t`: age of directories (slugs) in minutes.
+* `-d`: directory where slugs are located.
+
 ## License
 
 Fiche is MIT licensed.
