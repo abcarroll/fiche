@@ -1,0 +1,10 @@
+[Unit]
+Description=FICHE-CLEANER
+After=network.target fiche.service
+
+[Service]
+Type=simple
+ExecStart={CHANGEME}
+
+[Install]
+WantedBy=multi-user.target

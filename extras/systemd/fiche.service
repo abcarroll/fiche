@@ -1,0 +1,10 @@
+[Unit]
+Description=FICHE-SERVER
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={CHANGEME}
+
+[Install]
+WantedBy=multi-user.target
