@@ -307,17 +307,7 @@ __WARNING:__ not implemented yet
 
 ### Running as a service
 
-There's a simple systemd example:
-```
-[Unit]
-Description=FICHE-SERVER
-
-[Service]
-ExecStart=/usr/local/bin/fiche -d yourdomain.com -o /path/to/output -l /path/to/log -u youruser
-
-[Install]
-WantedBy=multi-user.target
-```
+There're some simple systemd examples in the extras/systemd/ directory.
 
 __WARNING:__ In service mode you have to set output directory with `-o` parameter.
 
