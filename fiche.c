@@ -55,6 +55,9 @@ $ cat fiche.c | nc localhost 9999
  */
 const char *Fiche_Symbols = "abcdefghijklmnopqrstuvwxyz0123456789";
 
+/* File handle for the log file */
+static FILE *logfile_handle = NULL;
+
 
 /******************************************************************************
  * Inner structs
@@ -179,11 +182,6 @@ static void log_entry(const Fiche_Settings *s, const char *ip,
 static void get_date(char *buf);
 
 
-/**
- * @brief Time seed
- */
-unsigned int seed;
-
 /******************************************************************************
  * Public fiche functions
  */
@@ -204,8 +202,8 @@ void fiche_init(Fiche_Settings *settings) {
         9999,
         // slug length
         4,
-        // https
-        false,
+        // protocol prefix
+        "http",
         // buffer length
         32768,
         // user name
@@ -226,7 +224,26 @@ void fiche_init(Fiche_Settings *settings) {
 
 int fiche_run(Fiche_Settings settings) {
 
-    seed = time(NULL);
+    // Check if log file is writable (if set)
+    if ( settings.log_file_path ) {
+
+        // Create log file if it doesn't exist
+        FILE *f = fopen(settings.log_file_path, "a+");
+	if (!f){
+	   print_error("Unable to create log file!");
+	   return -1;
+	}
+
+        // Then check if it's accessible
+        if ( access(settings.log_file_path, W_OK) != 0 ) {
+            print_error("Log file not writable!");
+	    fclose(f);
+            return -1;
+        }
+
+        logfile_handle = f;
+
+    }
 
     // Display welcome message
     {
@@ -255,26 +272,37 @@ int fiche_run(Fiche_Settings settings) {
         }
     }
 
-    // Check if log file is writable (if set)
-    if ( settings.log_file_path ) {
-
-        // Create log file if it doesn't exist
-        FILE *f = fopen(settings.log_file_path, "a+");
-        fclose(f);
-
-        // Then check if it's accessible
-        if ( access(settings.log_file_path, W_OK) != 0 ) {
-            print_error("Log file not writable!");
-            return -1;
-        }
-
-    }
-
     // Try to set domain name
     if ( set_domain_name(&settings) != 0 ) {
         print_error("Was not able to set domain name!");
+        if (logfile_handle) fclose(logfile_handle);
         return -1;
     }
+
+    pid_t pid = fork();
+    if (pid == -1){
+        char *err = strerror(0);
+        print_error("Unable to fork into background: %s", err);
+	if (logfile_handle) fclose(logfile_handle);
+        return -1;
+    }
+    if (pid > 0){
+        //parent
+	if (logfile_handle) fclose(logfile_handle);
+        return 0;
+    }
+
+    if (setsid() == -1){
+        char *err = strerror(0);
+        print_error("Creating new session id: %s", err);
+	if (logfile_handle) fclose(logfile_handle);
+        return -1;
+    }
+
+    // We are detached so close those to avoid noise
+    fclose(stdin);
+    fclose(stdout);
+    fclose(stderr);
 
     // Let people know that compression is enabled
     if (settings.compress) {
@@ -289,6 +317,8 @@ int fiche_run(Fiche_Settings settings) {
     // This is allways allocated on the heap
     free(settings.domain);
 
+    if (logfile_handle) fclose(logfile_handle);
+
     return 0;
 
 }
@@ -300,30 +330,36 @@ int fiche_run(Fiche_Settings settings) {
 
 static void print_error(const char *format, ...) {
     va_list args;
+    FILE *fd = logfile_handle ? logfile_handle : stderr;
+
     va_start(args, format);
 
-    printf("[Fiche][ERROR] ");
-    vprintf(format, args);
-    printf("\n");
-
+    fprintf(fd, "[Fiche][ERROR] ");
+    vfprintf(fd, format, args);
+    fprintf(fd, "\n");
+    fflush(fd);
     va_end(args);
 }
 
 
 static void print_status(const char *format, ...) {
     va_list args;
+    FILE *fd = logfile_handle ? logfile_handle : stderr;
+
     va_start(args, format);
 
-    printf("[Fiche][STATUS] ");
-    vprintf(format, args);
-    printf("\n");
-
+    fprintf(fd, "[Fiche][STATUS] ");
+    vfprintf(fd, format, args);
+    fprintf(fd, "\n");
+    fflush(fd);
     va_end(args);
 }
 
 
 static void print_separator() {
-    printf("============================================================\n");
+    FILE *fd = logfile_handle ? logfile_handle : stderr;
+    fprintf(fd, "============================================================\n");
+    fflush(fd);
 }
 
 
@@ -335,8 +371,7 @@ static void log_entry(const Fiche_Settings *s, const char *ip,
         return;
     }
 
-    FILE *f = fopen(s->log_file_path, "a");
-    if (!f) {
+    if (!logfile_handle) {
         print_status("Was not able to save entry to the log!");
         return;
     }
@@ -345,8 +380,7 @@ static void log_entry(const Fiche_Settings *s, const char *ip,
     get_date(date);
 
     // Write entry to file
-    fprintf(f, "%s -- %s -- %s (%s)\n", slug, date, ip, hostname);
-    fclose(f);
+    fprintf(logfile_handle, "%s -- %s -- %s (%s)\n", slug, date, ip, hostname);
 }
 
 
@@ -372,21 +406,16 @@ static void get_date(char *buf) {
 
 static int set_domain_name(Fiche_Settings *settings) {
 
-    char *prefix = "";
-    if (settings->https) {
-        prefix = "https://";
-    } else {
-        prefix = "http://";
-    }
-    const int len = strlen(settings->domain) + strlen(prefix) + 1;
+    const int len = strlen(settings->domain) + strlen(settings->prefix) + 4;
 
     char *b = malloc(len);
     if (!b) {
         return -1;
     }
 
-    strcpy(b, prefix);
-    strcat(b, settings->domain);
+    strlcpy(b, settings->prefix, len);
+    strlcat(b, "://", len);
+    strlcat(b, settings->domain, len);
 
     settings->domain = b;
 
@@ -556,7 +585,7 @@ static void *handle_connection(void *args) {
             hostname, sizeof(hostname), NULL, 0, 0) != 0 ) {
 
         // Couldn't resolve a hostname
-        strcpy(hostname, "n/a");
+       strlcpy(hostname, "n/a", 1024);
     }
 
     // Print status on this connection
@@ -713,7 +742,7 @@ static void generate_slug(char **output, uint8_t length, uint8_t extra_length) {
 
     // Take n-th symbol from symbol table and use it for slug generation
     for (int i = 0; i < length + extra_length; i++) {
-        int n = rand_r(&seed) % strlen(Fiche_Symbols);
+        int n = arc4random() % strlen(Fiche_Symbols);
         *(output[0] + sizeof(char) * i) = Fiche_Symbols[n];
     }
 
@@ -751,7 +780,7 @@ static int create_directory(char *output_dir, char *slug) {
 
 
 static int save_to_file(const Fiche_Settings *s, uint8_t *data, char *slug) {
-    char *file_name = "index.txt";
+    char *file_name = "paste.txt";
 
     // Additional 2 bytes are for 2 slashes
     size_t len = strlen(s->output_dir_path) + strlen(slug) + strlen(file_name) + 3;

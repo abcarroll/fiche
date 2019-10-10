@@ -75,10 +75,10 @@ int main(int argc, char **argv) {
             }
             break;
 
-            // https
-            case 'S':
+            // custom protocol prefix
+            case 'P':
             {
-                fs.https = true;
+                fs.prefix = optarg;
             }
             break;
 
@@ -135,18 +135,16 @@ int main(int argc, char **argv) {
             default:
             {
                 printf("usage: fiche [-zdLpsSoBulbw].\n");
-                printf("             [-d domain] [-L listen_addr] [-p port] [-s slug size]\n");
+                printf("             [-L listen_addr] [-p port] [-s slug size] [-P protocol] [-d domain]\n");
                 printf("             [-o output directory] [-B buffer size] [-u user name]\n");
-                printf("             [-l log file] [-b banlist] [-w whitelist] [-S]\n");
+                printf("             [-l log file] [-b banlist] [-w whitelist]\n");
                 return 0;
             }
             break;
         }
     }
 
-    fiche_run(fs);
-
-    return 0;
+    return fiche_run(fs);
 }
 
 

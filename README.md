@@ -175,7 +175,7 @@ __Default value:__ `./code`
 #### Domain `-d`
 
 This will be used as a prefix for an output received by the client.
-Value will be prepended with `http`.
+Value will be prepended with the domain prefix (see -P) if set or `http` otherwise.
 
 ```
 fiche -d domain.com
@@ -211,12 +211,12 @@ __Default value:__ 4
 
 -------------------------------------------------------------------------------
 
-#### HTTPS `-S`
+#### protocol prefix `-P`
 
-If set, fiche returns url with https prefix instead of http
+If set, fiche returns url with protocol prefix 'prefix' instead of http
 
 ```
-fiche -S
+fiche -P https
 ```
 
 __Output url with this parameter__: `https://localhost/xxxx`,
