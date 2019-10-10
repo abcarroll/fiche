@@ -133,13 +133,19 @@ __Note:__ For compilation with zlib compression you will need to install the zli
     sudo make install
     ```
 
+### Using Ports on FreeBSD
+
+To install the port: `cd /usr/ports/net/fiche/ && make install clean`. To add the package: `pkg install fiche`.
+
+_See [#86](https://github.com/solusipse/fiche/issues/86) for more info._
+
 -------------------------------------------------------------------------------
 
 ## Usage
 
 ```
 usage: fiche [-zD6epbsdSolBuw].
-             [-d domain] [-p port] [-s slug size]
+             [-d domain] [-L listen_addr] [-p port] [-s slug size]
              [-o output directory] [-B buffer size] [-u user name]
              [-l log file] [-b banlist] [-w whitelist] [-S]
 ```
@@ -198,8 +204,8 @@ fiche -s 6
 __Output url with default value__: `http://localhost/xxxx`,
 where x is a randomized character
 
-__Output url with example value 6__: `http://localhost/xxxx`,
-where is a randomized character
+__Output url with example value 6__: `http://localhost/xxxxxx`,
+where x is a randomized character
 
 __Default value:__ 4
 
