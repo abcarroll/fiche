@@ -26,7 +26,6 @@ $ cat fiche.c | nc localhost 9999
 #include <stdint.h>
 #include <stdbool.h>
 
-
 /**
  * @brief Used as a container for fiche settings. Create before
  *        the initialization
@@ -42,6 +41,8 @@ typedef struct Fiche_Settings {
      * @brief Path to directory used for storing uploaded pastes
      */
     char *output_dir_path;
+
+    char *output_file_name;
 
     /**
      * @brief Address on which fiche is waiting for connections

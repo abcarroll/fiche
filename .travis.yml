@@ -17,5 +17,5 @@ install:
 
 script:
   - cppcheck --enable=all --error-exitcode=1 --inconclusive main.c fiche.c
-  - make
+  - ./configure && make
   - scan-build --status-bugs make -B

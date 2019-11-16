@@ -26,6 +26,7 @@ $ cat fiche.c | nc localhost 9999
 -------------------------------------------------------------------------------
 */
 
+#include "config.h"
 #include "fiche.h"
 
 #include <stdio.h>
@@ -52,8 +53,15 @@ $ cat fiche.c | nc localhost 9999
 /******************************************************************************
  * Various declarations
  */
-const char *Fiche_Symbols = "abcdefghijklmnopqrstuvwxyz0123456789";
 
+// Note:
+// I'm certain that this suffers from mild bias due to the modulo, but ... :/
+
+#define SYMBOLS_ARRAY &Fiche_Symbols
+#define SYMBOLS_COUNT strlen(&Fiche_Symbols)
+
+#define GET_SYMBOL(x) Fiche_Symbols[x % (sizeof x -1)]
+const char *Fiche_Symbols = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.,";
 
 /******************************************************************************
  * Inner structs
@@ -182,6 +190,8 @@ static void get_date(char *buf);
  * @brief Time seed
  */
 unsigned int seed;
+
+unsigned int symbol_length
 
 /******************************************************************************
  * Public fiche functions
@@ -686,15 +696,23 @@ static void *handle_connection(void *args) {
 
 
 static void generate_slug(char **output, uint8_t length, uint8_t extra_length) {
-
     // Realloc buffer for slug when we want it to be bigger
     // This happens in case when directory with this name already
     // exists. To save time, we don't generate new slugs until
     // we spot an available one. We add another letter instead.
+    //
+    // Note that we don't do this when SAFE_SLUGS is enabled.  Instead, it's simply
+    // regenerated, so this code does not need to exist.
 
+#ifndef SAFE_SLUGS
     if (extra_length > 0) {
         free(*output);
     }
+#else
+    #if !defined(BSD)
+      FILE* urand = fopen("/dev/urandom", "rb");
+    #endif
+#endif
 
     // Create a buffer for slug with extra_length if any
     *output = calloc(length + 1 + extra_length, sizeof(char));
@@ -705,9 +723,20 @@ static void generate_slug(char **output, uint8_t length, uint8_t extra_length) {
 
     // Take n-th symbol from symbol table and use it for slug generation
     for (int i = 0; i < length + extra_length; i++) {
-        int n = rand_r(&seed) % strlen(Fiche_Symbols);
-        *(output[0] + sizeof(char) * i) = Fiche_Symbols[n];
+
+#ifndef SAFE_SLUGS
+      int symbol_id = rand_r(&seed);
+#else 
+    #if defined(HAVE_ARC4RANDOM)
+      int symbol_id = arc4random() % strlen(symbols);
+    #else
+      fread(&symbol_id, sizeof(symbol_id), 1, frandom);
+    #endif
+
+      *(output[0] + sizeof(char) * i) = GET_SYMBOL(n);
+      // slug[i] = symbols[symbol_id % strlen(Fiche_symbols)];
     }
+
 
 }
 
@@ -747,6 +776,7 @@ static int save_to_file(const Fiche_Settings *s, uint8_t *data, char *slug) {
 
     // Additional 2 bytes are for 2 slashes
     size_t len = strlen(s->output_dir_path) + strlen(slug) + strlen(file_name) + 3;
+    // size_t len = strlen(s->output_dir_path) + strlen(slug) + strlen(s->output_file_name) + 3;
 
     // Generate a path
     char *path = malloc(len);
