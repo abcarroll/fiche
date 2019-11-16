@@ -4,7 +4,7 @@ prefix=/usr/local/bin
 SYSTEMD_PATH=/lib/systemd/system/
 
 all:
-	${CC} main.c fiche.c -lz $(CFLAGS) -o fiche
+	${CC} main.c fiche.c -lz $(CFLAGS) -lbsd -o fiche
 	${CC} cleaner.c $(CFLAGS) -o cleaner
 
 install: fiche
