@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
     // Parse input arguments
     int c;
-    while ((c = getopt(argc, argv, "zD6eSL:p:b:s:d:o:l:B:u:w:")) != -1) {
+    while ((c = getopt(argc, argv, "zD6eSL:p:b:s:P:d:o:l:B:u:w:")) != -1) {
         switch (c) {
 
             // domain
