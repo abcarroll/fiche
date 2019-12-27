@@ -204,7 +204,7 @@ void fiche_init(Fiche_Settings *settings) {
 
     struct Fiche_Settings def = {
         // domain
-        "example.com",
+        "localhost",
         // output dir
         "code",
 	// listen_addr
