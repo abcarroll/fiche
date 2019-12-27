@@ -207,8 +207,8 @@ void fiche_init(Fiche_Settings *settings) {
         "localhost",
         // output dir
         "code",
-	// listen_addr
-	"0.0.0.0",
+        // listen_addr
+        "0.0.0.0",
         // port
         9999,
         // slug length
@@ -263,7 +263,7 @@ int fiche_run(Fiche_Settings settings) {
     }
 
     // Check if log file is writable (if set)
-    if ( settings.log_file_path ) {
+    if (settings.log_file_path) {
 
         // Create log file if it doesn't exist
         FILE *f = fopen(settings.log_file_path, "a+");
