@@ -11,6 +11,8 @@ all:
 
 install: fiche
 	install -m 0755 dist/fiche $(prefix)
+
+install-systemd: fiche
 	cp extras/systemd/* $(SYSTEMD_PATH)
 
 clean:
