@@ -1,5 +1,5 @@
 # ignore binaries
-/fiche
+/dist/*
 
 # ignore default outpit dir
 code/
