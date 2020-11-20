@@ -355,6 +355,15 @@ usage: cleaner	[-hvD] [-s sleep] [-t time] [-d directory]
 * `-t`: age of directories (slugs) in minutes.
 * `-d`: directory where slugs are located.
 
+## Building 
+
+To build on Debian-based Linux, you will need `libz-dev` and `libbsd-dev` packages, at least:
+
+```
+sudo apt-get install -y libz-dev libbsd-dev
+make
+```
+
 ## License
 
 Fiche is MIT licensed.
